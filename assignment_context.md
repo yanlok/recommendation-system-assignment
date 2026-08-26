@@ -129,7 +129,7 @@ Possible project-level objectives that still require team confirmation include:
 |---|---|---:|---|
 | 1 | Tay Ernest | 2501307 | Collaborative Filtering |
 | 2 | Chay Qian | 2501538 | Not yet specified in the current document |
-| 3 | — | — | — |
+| 3 | Wong Jin Yu | 2501126 | Content-Based Filtering |
 
 The official assignment requires each group member to develop and present their own work.
 
