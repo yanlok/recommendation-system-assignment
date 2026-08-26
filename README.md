@@ -14,9 +14,9 @@ This project implements a mood-based movie recommendation system. Users select t
 
 | No. | Student | Student ID | Module |
 |---|---|---|---|
-| 1 | Tay Ernest | 2501307 | Collaborative Filtering |
-| 2 | Chay Qian | 2501538 | Content-Based Filtering |
-| 3 | — | — | Hybrid / Other |
+| 1 | Tay Ernest | 2501307 | Hybrid Filtering |
+| 2 | Chay Qian | 2501538 | Collaborative Filtering |
+| 3 | Wong Jin Yu | 2501126 | Content-Based Filtering |
 
 ### Deadline
 
