@@ -199,8 +199,7 @@ This is the main page and should be the focus of the demonstration.
 Display:
 
 ```text
-🎬 MoodFlix
-Mood-Based Movie Recommendation System
+🎬 Mood-Based Movie Recommendation System
 ```
 
 Add a short description such as:

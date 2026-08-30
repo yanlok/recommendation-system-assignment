@@ -334,8 +334,8 @@ python scripts/run_evaluation.py      # regenerate output/ charts + metrics (opt
 Select User  →  Select Mood  →  Recommend  →  Top-N ranked movies
 ```
 
-1. **Movie Recommendations** — pick a user (three pre-tested demo users are
-   pinned at the top of the list), see the user's already-rated movies in the
+1. **Movie Recommendations** — pick one of the three pre-tested demo users,
+   see the user's already-rated movies in the
    collapsible "Already watched" panel, pick one of six moods, choose Top-N
    (5/10/15/20) and an algorithm (Collaborative / Content-Based / Hybrid,
    default Hybrid), then press **Recommend Movies**. Each result card shows

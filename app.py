@@ -1,4 +1,4 @@
-"""MoodFlix - Mood-Based Movie Recommendation System (Streamlit UI).
+"""Mood-Based Movie Recommendation System (Streamlit UI).
 
 UI only: user/mood selection, the recommend button and result display.
 All recommendation logic lives in src/ (see documentation plan §34).
@@ -15,7 +15,7 @@ sys.path.insert(0, str(ROOT))
 
 from src import collaborative, content_based, data_loader, hybrid, mood_filter, utils
 
-st.set_page_config(page_title="MoodFlix", page_icon="🎬", layout="wide")
+st.set_page_config(page_title="Mood Based Recommendation System", page_icon="🎬", layout="wide")
 
 
 # ── Cached loading (plan §22, §23) ────────────────────────────────
@@ -113,11 +113,9 @@ def render_result_cards(result, mood, method):
 
 
 def user_selector(key, label="Select User"):
-    demo_labels = {f"⭐ {name} — {desc}": uid for name, uid, desc in utils.DEMO_USERS}
-    all_labels = {f"User {uid}": uid for uid in sorted(RATING_COUNTS.index)}
-    options = list(demo_labels) + list(all_labels)
-    choice = st.selectbox(label, options, index=0, key=key)
-    return demo_labels[choice] if choice in demo_labels else int(choice.split()[-1])
+    demo_labels = {f"{name} — {desc}": uid for name, uid, desc in utils.DEMO_USERS}
+    choice = st.selectbox(label, list(demo_labels), index=0, key=key)
+    return demo_labels[choice]
 
 
 def mood_selector(key, label="How are you feeling today?"):
@@ -138,8 +136,8 @@ def watched_expander(user_id):
 
 
 # ── Page header ───────────────────────────────────────────────────
-st.title("🎬 MoodFlix")
-st.caption("Mood-Based Movie Recommendation System — select who you are and how you "
+st.title("🎬 Mood Based Recommendation System")
+st.caption("Select who you are and how you "
            "feel, and receive personalised movie recommendations.")
 
 tab_rec, tab_compare, tab_eval = st.tabs(
