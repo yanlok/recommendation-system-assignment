@@ -97,19 +97,15 @@ def generate_recommendations(user_id, mood, n, method):
 
 def render_result_cards(result, mood, method):
     method_key = ALGORITHM_KEYS.get(method, "popularity")
+    st.caption(f"All picks match your {mood} mood ({', '.join(MOOD_GENRES[mood])}).")
     for _, movie in result.iterrows():
         with st.container(border=True):
-            left, right = st.columns([1, 5])
-            with left:
-                st.markdown(f"## #{movie['rank']}")
-            with right:
-                st.markdown(f"### {movie['title']}")
-                st.caption(str(movie["genres_str"]).replace("|", " • "))
-                st.markdown(f"Predicted rating: **{movie['score']:.2f} / 5**")
-                reason = (utils.reason_for("popularity") if movie["source"] == "popularity"
-                          else utils.reason_for(method_key))
-                st.caption(f"Why recommended: {utils.mood_match_note(mood, MOOD_GENRES[mood])} "
-                           f"— {reason}")
+            title_col, score_col = st.columns([5, 1])
+            title_col.markdown(f"**#{movie['rank']} · {movie['title']}**")
+            score_col.markdown(f"⭐ **{movie['score']:.2f} / 5**")
+            reason = (utils.reason_for("popularity") if movie["source"] == "popularity"
+                      else utils.reason_for(method_key))
+            st.caption(f"{str(movie['genres_str']).replace('|', ' • ')} — {reason}")
 
 
 def user_selector(key, label="Select User"):
