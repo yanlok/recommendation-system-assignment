@@ -160,8 +160,6 @@ with tab_rec:
         result, meta, r_user, r_mood, r_n, r_method = st.session_state["rec_result"]
         st.divider()
         st.subheader(f"Recommended for user {r_user} — feeling {r_mood}")
-        st.caption(f"{r_method} • Top-{r_n} • {meta.get('n_candidates', 0)} candidate movies "
-                   f"after mood filtering and excluding already-rated titles.")
         if meta.get("notice"):
             st.info(meta["notice"])
         if meta.get("empty") or result.empty:
@@ -205,8 +203,6 @@ with tab_compare:
 
 # ── Tab 3: evaluation results (plan §30, §31) ─────────────────────
 with tab_eval:
-    st.caption("Offline evaluation of the implemented algorithms (run via "
-               "scripts/run_evaluation.py — not recomputed on user requests).")
 
     metrics_path = utils.OUTPUT_DIR / "metrics_rating.csv"
     topk_path = utils.OUTPUT_DIR / "metrics_topk.csv"
