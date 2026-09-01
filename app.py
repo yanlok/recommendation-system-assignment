@@ -108,10 +108,34 @@ def render_result_cards(result, mood, method):
             st.caption(f"{str(movie['genres_str']).replace('|', ' • ')} — {reason}")
 
 
+def _sync_user(key):
+    """Callback: sync both user selectors to the same value."""
+    uid = st.session_state[key]
+    st.session_state["selected_user"] = uid
+    # Streamlit caches widget values by key — explicitly set the other
+    # selector's key so it picks up the change on the next rerun.
+    for other_key in ("rec_user", "cmp_user"):
+        if other_key != key:
+            st.session_state[other_key] = uid
+
+
+# UID ↔ label mapping (built once, reused by both selectors)
+_DEMO_LABELS = {f"{name} — {desc}": uid for name, uid, desc in utils.DEMO_USERS}
+_DEMO_UIDS = list(_DEMO_LABELS.values())
+_DEMO_NAMES = list(_DEMO_LABELS.keys())
+
+
 def user_selector(key, label="Select User"):
-    demo_labels = {f"{name} — {desc}": uid for name, uid, desc in utils.DEMO_USERS}
-    choice = st.selectbox(label, list(demo_labels), index=0, key=key)
-    return demo_labels[choice]
+    shared_uid = st.session_state.get("selected_user")
+    index = 0
+    if shared_uid is not None:
+        for i, uid in enumerate(_DEMO_UIDS):
+            if uid == shared_uid:
+                index = i
+                break
+    choice = st.selectbox(label, _DEMO_NAMES, index=index, key=key,
+                          on_change=lambda: _sync_user(key))
+    return _DEMO_LABELS[choice]
 
 
 def mood_selector(key, label="How are you feeling today?"):
@@ -175,23 +199,34 @@ with tab_compare:
     c_n = st.select_slider("Number of recommendations", utils.N_OPTIONS,
                            value=utils.DEFAULT_N, key="cmp_n")
 
-    if st.button("⚖️ Compare All Algorithms", type="primary", use_container_width=True, key="cmp_btn"):
+    st.markdown("**Algorithms to compare:**")
+    algo_cols = st.columns(3)
+    selected_algos = {}
+    for col, (name, key) in zip(algo_cols, ALGORITHM_KEYS.items()):
+        with col:
+            if st.checkbox(name, value=True, key=f"algo_{key}"):
+                selected_algos[name] = key
+
+    if not selected_algos:
+        st.warning("Please select at least one algorithm.")
+    elif st.button("⚖️ Compare Selected Algorithms", type="primary", use_container_width=True, key="cmp_btn"):
         if c_mood is None:
             st.warning("Please select your current mood.")
         else:
-            with st.spinner("Running all algorithms..."):
+            with st.spinner("Running selected algorithms..."):
                 st.session_state["cmp_result"] = (
                     {m: generate_recommendations(c_user, c_mood, c_n, m)[0]
-                     for m in ALGORITHM_KEYS}, c_user, c_mood, c_n)
+                     for m in selected_algos}, c_user, c_mood, c_n,
+                    selected_algos)
 
     if "cmp_result" in st.session_state:
-        results, r_user, r_mood, r_n = st.session_state["cmp_result"]
+        results, r_user, r_mood, r_n, algo_names = st.session_state["cmp_result"]
         st.divider()
         st.subheader(f"User {r_user} — feeling {r_mood} — Top-{r_n}")
-        columns = st.columns(3)
-        for col, (method, result) in zip(columns, results.items()):
+        columns = st.columns(len(results))
+        for col, (method_key, result) in zip(columns, results.items()):
             with col:
-                st.markdown(f"**{method}**")
+                st.markdown(f"**{method_key}**")
                 if result.empty:
                     st.warning("No results.")
                     continue
@@ -207,36 +242,39 @@ with tab_eval:
     metrics_path = utils.OUTPUT_DIR / "metrics_rating.csv"
     topk_path = utils.OUTPUT_DIR / "metrics_topk.csv"
 
-    st.subheader("Rating Prediction Accuracy")
+    # ── Section 1: Overall Algorithm Comparison ─────────────────────
+    st.subheader("📊 Overall Algorithm Comparison")
+    st.markdown("Side-by-side performance of all three recommendation algorithms.")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        path = utils.OUTPUT_DIR / "evaluation_results.png"
+        if path.exists():
+            st.image(path, caption="Rating-prediction RMSE and MAE per algorithm.")
+    with col2:
+        path = utils.OUTPUT_DIR / "error_distribution.png"
+        if path.exists():
+            st.image(path, caption="Prediction error distribution; a peak at zero means accurate predictions.")
+
     if metrics_path.exists():
         st.dataframe(pd.read_csv(metrics_path), use_container_width=True)
-    else:
-        st.info("Run scripts/run_evaluation.py to generate the metrics.")
 
-    for chart, caption in [
-        ("evaluation_results.png", "Rating-prediction error per algorithm: the hybrid "
-                                   "combines both models and achieves the lowest RMSE/MAE."),
-        ("error_distribution.png", "Distribution of prediction errors (actual − predicted) per "
-                                   "algorithm; a peak at zero means accurate predictions."),
-        ("alpha_tuning.png", "Tuning the hybrid blending weight α: the chosen α balances "
-                             "collaborative and content-based contributions."),
-    ]:
-        path = utils.OUTPUT_DIR / chart
-        if path.exists():
-            st.image(path, caption=caption, use_container_width=True)
+    path = utils.OUTPUT_DIR / "precision_recall_f1.png"
+    if path.exists():
+        st.image(path, caption="Precision@K / Recall@K / F1@K across algorithms.")
 
-    st.subheader("Top-N Recommendation Quality")
     if topk_path.exists():
         st.dataframe(pd.read_csv(topk_path), use_container_width=True)
-    else:
-        st.info("Run scripts/run_evaluation.py to generate the metrics.")
 
-    for chart, caption in [
-        ("precision_recall_f1.png", "Precision@K / Recall@K / F1@K of the hybrid: of the "
-                                    "movies recommended, how many the user actually liked."),
-        ("mood_recommendations.png", "Top-rated movies per mood category, showing the "
-                                     "mood-to-genre mapping produces distinct candidate pools."),
-    ]:
-        path = utils.OUTPUT_DIR / chart
-        if path.exists():
-            st.image(path, caption=caption, use_container_width=True)
+    path = utils.OUTPUT_DIR / "alpha_tuning.png"
+    if path.exists():
+        st.image(path, caption="Tuning the hybrid blending weight α to balance collaborative and content-based contributions.")
+
+    # ── Section 2: Mood-Based Recommendations ───────────────────────
+    st.divider()
+    st.subheader("🎭 Mood-Based Recommendations")
+    st.markdown("Top-rated movies per mood category, showing the mood-to-genre mapping produces distinct candidate pools.")
+
+    path = utils.OUTPUT_DIR / "mood_recommendations.png"
+    if path.exists():
+        st.image(path, caption="Top-rated movies per mood category.")
